@@ -1,87 +1,22 @@
-// ignore_for_file: prefer_const_constructors
-
-import 'package:aplikasi_pencatan_pengualaran/widget/chart/chart_widget.dart';
-import 'package:aplikasi_pencatan_pengualaran/widget/input/input_expense_widget.dart';
-import 'package:aplikasi_pencatan_pengualaran/widget/main/main_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:aplikasi_pencatan_pengualaran/model/expense.dart';
-import 'package:flutter/services.dart';
-import 'package:intl/date_symbol_data_local.dart';
-import 'package:intl/intl.dart';
+import './widgets/new_transaction.dart';
+import './widgets/transaction_list.dart';
+import './widgets/chart.dart';
+import './models/transaction.dart';
 
 void main() {
-  //setting to orientation
-  WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setPreferredOrientations(
-      [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
-  runApp(const MyApp());
+  // SystemChrome.setPreferredOrientations([
+  //   DeviceOrientation.portraitUp,
+  //   DeviceOrientation.portraitUp,
+  // ]);
+  runApp(MyApp());
 }
 
-class MyApp extends StatefulWidget {
-  const MyApp({Key? key}) : super(key: key);
-
+class MyApp extends StatelessWidget {
   @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  final scaffoldKey = GlobalKey<ScaffoldState>();
-
-  final List<Expense> _expenses = [];
-
-  void _saveExpense(String title, int nominal, DateTime dateTime) {
-    Expense newExpense = Expense(
-        id: DateTime.now().toString(),
-        title: title,
-        nominal: nominal,
-        date: dateTime);
-    setState(() {
-      _expenses.add(newExpense);
-    });
-  }
-
-  void _showExpenseForm(BuildContext ctx) => showModalBottomSheet(
-      context: ctx,
-      builder: (_) {
-        return GestureDetector(
-            onTap: () {},
-            behavior: HitTestBehavior.opaque,
-            child: InputExpenseWidget(
-              savePressed: _saveExpense,
-            ));
-      });
-
-  void deleteItem(int index) {
-    setState(() {
-      _expenses.removeAt(index);
-    });
-  }
-
-  @override
-  Widget build(BuildContext ctx) {
-    initializeDateFormatting(); //Initialisasi Tanggal
-
-    AppBar appBar = AppBar(
-      title: Text(
-        "Pencatatan Pengeluaran",
-        // style: TextStyle(fontFamily: "OpenSans"),
-      ),
-      actions: [
-        IconButton(
-            onPressed: () {
-              BuildContext? curentContext = scaffoldKey.currentContext;
-              if (curentContext != null) {
-                _showExpenseForm(curentContext);
-              }
-            },
-            icon: Icon(
-              Icons.add,
-              color: Colors.white,
-            ))
-      ],
-    );
-
+  Widget build(BuildContext context) {
     return MaterialApp(
+      title:   "Pencatatan Pengeluaran",
       theme: ThemeData(
           primarySwatch: Colors.red,
           fontFamily: 'Quicksand',
@@ -89,23 +24,148 @@ class _MyAppState extends State<MyApp> {
               textTheme: ThemeData.light().textTheme.copyWith(
                   titleMedium:
                       TextStyle(fontFamily: "OpenSans", fontSize: 30)))),
-      home: Scaffold(
-        key: scaffoldKey,
-        appBar: appBar,
-        body: SingleChildScrollView(
-            child: MainWidget(
-          expenses: _expenses,
-          deleteItem: deleteItem,
-          appBarHeight: appBar.preferredSize.height,
-        )),
-        floatingActionButton: FloatingActionButton(
-            onPressed: () {
-              BuildContext? curentContext = scaffoldKey.currentContext;
-              if (curentContext != null) {
-                _showExpenseForm(curentContext);
-              }
-            },
-            child: Icon(Icons.add)),
+      home: MyHomePage(),
+    );
+  }
+}
+
+class MyHomePage extends StatefulWidget {
+  // String titleInput;
+  // String amountInput;
+  @override
+  _MyHomePageState createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  final List<Transaction> _userTransactions = [
+    // Transaction(
+    //   id: 't1',
+    //   title: 'New Shoes',
+    //   amount: 69.99,
+    //   date: DateTime.now(),
+    // ),
+    // Transaction(
+    //   id: 't2',
+    //   title: 'Weekly Groceries',
+    //   amount: 16.53,
+    //   date: DateTime.now(),
+    // ),
+  ];
+  bool _showChart = false;
+
+  List<Transaction> get _recentTransactions {
+    return _userTransactions.where((tx) {
+      return tx.date.isAfter(
+        DateTime.now().subtract(
+          Duration(days: 7),
+        ),
+      );
+    }).toList();
+  }
+
+  void _addNewTransaction(
+      String txTitle, double txAmount, DateTime chosenDate) {
+    final newTx = Transaction(
+      title: txTitle,
+      amount: txAmount,
+      date: chosenDate,
+      id: DateTime.now().toString(),
+    );
+
+    setState(() {
+      _userTransactions.add(newTx);
+    });
+  }
+
+  void _startAddNewTransaction(BuildContext ctx) {
+    showModalBottomSheet(
+      context: ctx,
+      builder: (_) {
+        return GestureDetector(
+          onTap: () {},
+          child: NewTransaction(_addNewTransaction),
+          behavior: HitTestBehavior.opaque,
+        );
+      },
+    );
+  }
+
+  void _deleteTransaction(String id) {
+    setState(() {
+      _userTransactions.removeWhere((tx) => tx.id == id);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
+    final appBar = AppBar(
+      title: Text(
+        'Personal Expenses',
+      ),
+      actions: <Widget>[
+        IconButton(
+          icon: Icon(Icons.add),
+          onPressed: () => _startAddNewTransaction(context),
+        ),
+      ],
+    );
+    final txListWidget = Container(
+      height: (MediaQuery.of(context).size.height -
+              appBar.preferredSize.height -
+              MediaQuery.of(context).padding.top) *
+          0.7,
+      child: TransactionList(_userTransactions, _deleteTransaction),
+    );
+    return Scaffold(
+      appBar: appBar,
+      body: SingleChildScrollView(
+        child: Column(
+          // mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            if (isLandscape)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Text('Show Chart'),
+                  Switch(
+                    value: _showChart,
+                    onChanged: (val) {
+                      setState(() {
+                        _showChart = val;
+                      });
+                    },
+                  ),
+                ],
+              ),
+            if (!isLandscape)
+              Container(
+                height: (MediaQuery.of(context).size.height -
+                        appBar.preferredSize.height -
+                        MediaQuery.of(context).padding.top) *
+                    0.3,
+                child: Chart(_recentTransactions),
+              ),
+            if (!isLandscape) txListWidget,
+            if (isLandscape)
+              _showChart
+                  ? Container(
+                      height: (MediaQuery.of(context).size.height -
+                              appBar.preferredSize.height -
+                              MediaQuery.of(context).padding.top) *
+                          0.7,
+                      child: Chart(_recentTransactions),
+                    )
+                  : txListWidget
+          ],
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.add),
+        onPressed: () => _startAddNewTransaction(context),
       ),
     );
   }
