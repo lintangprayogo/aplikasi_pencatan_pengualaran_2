@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 class NewTransaction extends StatefulWidget {
   final Function addTx;
 
-  NewTransaction(this.addTx);
+  const NewTransaction(this.addTx);
 
   @override
   _NewTransactionState createState() => _NewTransactionState();
@@ -22,10 +22,10 @@ class _NewTransactionState extends State<NewTransaction> {
     final enteredTitle = _titleController.text;
     final enteredAmount = double.tryParse(_amountController.text);
 
-    if(enteredAmount==null){
+    if (enteredAmount == null) {
       return;
     }
-    
+
     if (enteredTitle.isEmpty || enteredAmount <= 0 || _selectedDate == null) {
       return;
     }
@@ -62,7 +62,11 @@ class _NewTransactionState extends State<NewTransaction> {
       child: Card(
         elevation: 5,
         child: Container(
-          padding: EdgeInsets.only(top: 10,bottom: MediaQuery.of(context).viewInsets.bottom+10,left: 10,right: 10),
+          padding: EdgeInsets.only(
+              top: 10,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 10,
+              left: 10,
+              right: 10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: <Widget>[
@@ -87,9 +91,9 @@ class _NewTransactionState extends State<NewTransaction> {
                   children: <Widget>[
                     Expanded(
                       child: Text(
-                       _selectedDate == null
-                              ? 'Tidak Ada Tanggal yang Dipilih!'
-                              : 'Tanggal Dipilih: ${DateFormat.yMd().format(_selectedDate)}',
+                        _selectedDate == null
+                            ? 'Tidak Ada Tanggal yang Dipilih!'
+                            : 'Tanggal Dipilih: ${DateFormat.yMd().format(_selectedDate)}',
                       ),
                     ),
                     TextButton(
@@ -105,7 +109,7 @@ class _NewTransactionState extends State<NewTransaction> {
                   ],
                 ),
               ),
-                ElevatedButton(
+              ElevatedButton(
                   style: ButtonStyle(
                       backgroundColor: MaterialStateProperty.all(
                           Theme.of(context).primaryColor)),
